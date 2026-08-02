@@ -49,10 +49,20 @@ jobs:
           echo "android.sdk_path = $ANDROID_HOME" >> buildozer.spec
           yes | sdkmanager --licenses > /dev/null 2>&1 || true
 
-      - name: بیلد APK
+      - name: بیلد APK (با تلاش مجدد خودکار در صورت قطعی موقت شبکه)
         working-directory: src
         run: |
-          yes | buildozer -v android debug
+          for i in 1 2 3; do
+            echo "=== تلاش شماره $i ==="
+            if yes | buildozer -v android debug; then
+              echo "بیلد موفق شد"
+              exit 0
+            fi
+            echo "تلاش $i شکست خورد، ۳۰ ثانیه صبر و تلاش دوباره..."
+            sleep 30
+          done
+          echo "بیلد بعد از ۳ تلاش شکست خورد"
+          exit 1
 
       - name: آپلود APK به عنوان خروجی قابل دانلود
         if: always()
